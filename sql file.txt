@@ -1,0 +1,55 @@
+-- Users table
+CREATE TABLE public.users (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  username text NOT NULL UNIQUE,
+  password text NOT NULL
+);
+
+-- Templates table
+CREATE TABLE public.templates (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name text NOT NULL,
+  original_file_name text NOT NULL,
+  file_type text NOT NULL,
+  storage_url text NOT NULL,
+  storage_id text NOT NULL,
+  placeholders jsonb NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  user_id uuid,
+  CONSTRAINT templates_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+
+-- Documents table
+CREATE TABLE public.documents (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  template_id integer,
+  name text NOT NULL,
+  file_type text NOT NULL,
+  storage_url text NOT NULL,
+  storage_id text NOT NULL,
+  placeholder_data jsonb NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT documents_template_id_templates_id_fk FOREIGN KEY (template_id) REFERENCES public.templates(id)
+);
+
+-- Generated Documents table
+CREATE TABLE public.generated_documents (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id uuid NOT NULL,
+  template_id integer NOT NULL,
+  name text NOT NULL,
+  storage_path text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT generated_documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT generated_documents_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.templates(id)
+);
+
+-- Profiles table
+CREATE TABLE public.profiles (
+  id uuid PRIMARY KEY,
+  full_name text,
+  avatar_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
